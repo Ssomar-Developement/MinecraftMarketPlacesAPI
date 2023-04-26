@@ -62,7 +62,8 @@ public class SpigotBrowser extends VirtualBrowser {
                     .replace("/", "")
                     .split("[.]")[1];
         } catch (Exception | Error e) {
-            System.out.println("Error while login, try again");
+            System.out.println("Error while login, try again in 15 seconds");
+            sleep(15000);
            return login(username, password);
         }
     }
