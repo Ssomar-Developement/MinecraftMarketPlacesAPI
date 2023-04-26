@@ -2,6 +2,7 @@ package com.ssomar.minecraftmarketplacesapi;
 
 import com.ssomar.minecraftmarketplacesapi.config.Config;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
 public class SpigotBrowser extends VirtualBrowser {
@@ -40,8 +41,10 @@ public class SpigotBrowser extends VirtualBrowser {
 
             // Fill in credentials
             usernameField.clear();
+            usernameField.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
             sleep(1000);
             passwordField.clear();
+            passwordField.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
             sleep(1000);
             usernameField.sendKeys(username);
             sleep(1000);
