@@ -28,7 +28,7 @@ public class SpigotBrowser extends VirtualBrowser {
             }
 
             navigate(BASE + "/login");
-            sleep(1000);
+            sleep(2000);
 
             WebElement loginDialog = driver.findElement(By.id("pageLogin"));
             WebElement usernameField = loginDialog.findElement(By.id("ctrl_pageLogin_login"));
@@ -40,9 +40,13 @@ public class SpigotBrowser extends VirtualBrowser {
 
             // Fill in credentials
             usernameField.clear();
+            sleep(1000);
             passwordField.clear();
+            sleep(1000);
             usernameField.sendKeys(username);
+            sleep(1000);
             passwordField.sendKeys(password);
+            sleep(1000);
 
             // Login!
             passwordField.submit();
