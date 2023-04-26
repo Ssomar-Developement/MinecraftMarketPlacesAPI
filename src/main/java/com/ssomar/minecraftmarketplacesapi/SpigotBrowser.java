@@ -17,44 +17,50 @@ public class SpigotBrowser extends VirtualBrowser {
     }
 
     private String login(String username, String password){
-        navigate("https://www.spigotmc.org/logout");
-        String url = this.driver.getCurrentUrl();
-        System.out.println("URL : " + url);
-        if (url.contains("logout")) {
-            System.out.println("Logout check");
-            WebElement element = this.driver.findElement(By.cssSelector("a[class='button primary LogOut']"));
-            element.click();
+        try {
+            navigate("https://www.spigotmc.org/logout");
+            String url = this.driver.getCurrentUrl();
+            System.out.println("URL : " + url);
+            if (url.contains("logout")) {
+                System.out.println("Logout check");
+                WebElement element = this.driver.findElement(By.cssSelector("a[class='button primary LogOut']"));
+                element.click();
+            }
+
+            navigate(BASE + "/login");
+            sleep(1000);
+
+            WebElement loginDialog = driver.findElement(By.id("pageLogin"));
+            WebElement usernameField = loginDialog.findElement(By.id("ctrl_pageLogin_login"));
+            WebElement passwordField = loginDialog.findElement(By.id("ctrl_pageLogin_password"));
+
+            if (usernameField == null || passwordField == null) {
+                throw new IllegalStateException("Could not find a username or password field!");
+            }
+
+            // Fill in credentials
+            usernameField.clear();
+            passwordField.clear();
+            usernameField.sendKeys(username);
+            passwordField.sendKeys(password);
+
+            // Login!
+            passwordField.submit();
+
+            sleep(2000);
+
+            WebElement link = driver.findElement(By.className("sidebar"))
+                    .findElement(By.className("visitorPanel"))
+                    .findElement(By.className("avatar"));
+
+            return link.getAttribute("href")
+                    .split("/members/")[1]
+                    .replace("/", "")
+                    .split("[.]")[1];
+        } catch (Exception | Error e) {
+            System.out.println("Error while login, try again");
+           return login(username, password);
         }
-
-        navigate(BASE + "/login");
-
-        WebElement loginDialog = driver.findElement(By.id("pageLogin"));
-        WebElement usernameField = loginDialog.findElement(By.id("ctrl_pageLogin_login"));
-        WebElement passwordField = loginDialog.findElement(By.id("ctrl_pageLogin_password"));
-
-        if (usernameField == null || passwordField == null) {
-            throw new IllegalStateException("Could not find a username or password field!");
-        }
-
-        // Fill in credentials
-        usernameField.clear();
-        passwordField.clear();
-        usernameField.sendKeys(username);
-        passwordField.sendKeys(password);
-
-        // Login!
-        passwordField.submit();
-
-        sleep(2000);
-
-        WebElement link = driver.findElement(By.className("sidebar"))
-                .findElement(By.className("visitorPanel"))
-                .findElement(By.className("avatar"));
-
-        return link.getAttribute("href")
-                .split("/members/")[1]
-                .replace("/", "")
-                .split("[.]")[1];
     }
 
     public void postAnUpdate(String link, String version, String title, String description, String uploadFilePath) {
