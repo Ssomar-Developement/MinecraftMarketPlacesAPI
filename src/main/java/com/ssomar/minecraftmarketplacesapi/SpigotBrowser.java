@@ -1,6 +1,5 @@
 package com.ssomar.minecraftmarketplacesapi;
 
-import com.ssomar.minecraftmarketplacesapi.config.Config;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
@@ -11,13 +10,19 @@ public class SpigotBrowser extends VirtualBrowser {
 
     private final String loggedInUserId;
 
-    public SpigotBrowser() {
-        super(BASE, "3", false);
-        System.out.println("Try to connect on spigot with the username: " + Config.getInstance().getSpigotUsername());
-        loggedInUserId = login(Config.getInstance().getSpigotUsername(), Config.getInstance().getSpigotPassword());
+    private int t;
+
+    public SpigotBrowser(String spigotUsername, String spigotPassword, boolean spigot2FA) throws Exception {
+        super(BASE, "Spigot", false);
+        t = 0;
+        System.out.println("Try to connect on spigot with the username: " + spigotUsername);
+        loggedInUserId = login(spigotUsername, spigotPassword, spigot2FA);
     }
 
-    private String login(String username, String password){
+    private String login(String username, String password, boolean spigot2FA) throws Exception {
+        if (t == 4) {
+            throw new Exception("Error while login to : " + BASE + " with the username: " + username);
+        }
         try {
             navigate("https://www.spigotmc.org/logout");
             String url = this.driver.getCurrentUrl();
@@ -41,10 +46,10 @@ public class SpigotBrowser extends VirtualBrowser {
 
             // Fill in credentials
             usernameField.clear();
-            usernameField.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
+            usernameField.sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
             sleep(1000);
             passwordField.clear();
-            passwordField.sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE));
+            passwordField.sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
             sleep(1000);
             usernameField.sendKeys(username);
             sleep(1000);
@@ -53,8 +58,12 @@ public class SpigotBrowser extends VirtualBrowser {
 
             // Login!
             passwordField.submit();
-
             sleep(2000);
+
+            if (spigot2FA) {
+                System.out.println("2FA check, you have 30 seconds to enter the code");
+                sleep(30000);
+            }
 
             WebElement link = driver.findElement(By.className("sidebar"))
                     .findElement(By.className("visitorPanel"))
@@ -65,9 +74,11 @@ public class SpigotBrowser extends VirtualBrowser {
                     .replace("/", "")
                     .split("[.]")[1];
         } catch (Exception | Error e) {
+            e.printStackTrace();
             System.out.println("Error while login, try again in 15 seconds");
             sleep(15000);
-           return login(username, password);
+            t++;
+            return login(username, password, spigot2FA);
         }
     }
 
@@ -97,7 +108,13 @@ public class SpigotBrowser extends VirtualBrowser {
             sleep(1000);
             for (WebElement wE : driver.findElements(By.tagName("input"))) {
                 //System.out.println(wE.getAttribute("value"));
-                if (wE.getAttribute("type").equals("file")) {
+                if (uploadFilePath.contains("no-file")) {
+                    if (wE.getAttribute("type").equals("url")) {
+                        String uploadFilePathEdited = uploadFilePath.replace("no-file", "");
+                        wE.clear();
+                        wE.sendKeys(uploadFilePathEdited);
+                    } else continue;
+                } else if (wE.getAttribute("type").equals("file")) {
                     wE.sendKeys(uploadFilePath);
                 }
             }
@@ -129,8 +146,7 @@ public class SpigotBrowser extends VirtualBrowser {
                 System.out.println("[INFO] USER: " + buyerUsername + " added in the buyer list of the resource: " + ressourceID);
                 return BuyerResp.VALID;
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return BuyerResp.SYSTEM_ERROR;
         }
     }

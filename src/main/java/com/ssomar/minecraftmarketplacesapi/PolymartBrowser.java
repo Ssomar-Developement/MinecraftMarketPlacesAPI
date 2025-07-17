@@ -1,6 +1,5 @@
 package com.ssomar.minecraftmarketplacesapi;
 
-import com.ssomar.minecraftmarketplacesapi.config.Config;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -14,16 +13,16 @@ public class PolymartBrowser extends VirtualBrowser {
 
     private final String loggedInUserId;
 
-    public PolymartBrowser(){
+    public PolymartBrowser(String polymardUsername, String polymartPassword) {
         super(BASE, "2", false);
-        System.out.println("Try to connect on polymart with the username: " + Config.getInstance().getPolymartUsername() + " and the password: " + Config.getInstance().getPolymartPassword());
-        loggedInUserId = login(Config.getInstance().getPolymartUsername(), Config.getInstance().getPolymartPassword());
+        System.out.println("Try to connect on polymart with the username: " + polymardUsername);
+        loggedInUserId = login(polymardUsername, polymartPassword);
     }
 
     private String login(String username, String password) {
         navigate(BASE + "/login");
 
-        WebElement usernameField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("loginCredential"))));
+        WebElement usernameField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("email"))));
         WebElement passwordField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("password"))));
 
         if (usernameField == null || passwordField == null) {
@@ -38,12 +37,13 @@ public class PolymartBrowser extends VirtualBrowser {
 
         sleep(1000);
         // Login!
-        WebElement loginButton = driver.findElement(By.name("submit"));
+        WebElement loginButton = driver.findElement(By.id("login-4"));
         loginButton.click();
 
-        sleep(2000);
+        sleep(5000);
 
-        WebElement link = driver.findElement(By.xpath("//a[@class='main-header-account-button dark']"));
+        WebElement link = driver.findElement(By.xpath("//a[img[contains(@alt, 'profile photo')]]"));
+        ;
 
         return link.getAttribute("href")
                 .split("/user/")[1]
@@ -98,11 +98,13 @@ public class PolymartBrowser extends VirtualBrowser {
         try {
             navigate(BASE + link);
             sleep(2000);
-            WebElement updateElem = driver.findElement(By.id("update-button"));
+            WebElement updateElem = driver.findElement(
+                    By.xpath("//a[text()='Post an update']")
+            );
             updateElem.click();
             sleep(1000);
 
-            WebElement versionElem = driver.findElement(By.name("update_version"));
+            WebElement versionElem = driver.findElement(By.name("version"));
             versionElem.clear();
             versionElem.sendKeys(version);
             sleep(1000);
@@ -110,32 +112,74 @@ public class PolymartBrowser extends VirtualBrowser {
             titleElem.clear();
             titleElem.sendKeys(title);
             sleep(1000);
-            WebElement bbElem = driver.findElement(By.xpath("//a[@onclick=\"clicksImportFromBBCode('update-description-tinymce')\"]"));
-            bbElem.click();
+            //WebElement bbElem = driver.findElement(By.xpath("//a[@onclick=\"clicksImportFromBBCode('update-description-tinymce')\"]"));
+            //bbElem.click();
 
             sleep(1000);
-            WebElement descriptionElem = driver.findElement(By.id("import-bbcode__update-description-tinymce"));
+            /*WebElement descriptionElem = driver.findElement(By.id("import-bbcode__update-description-tinymce"));
             for (WebElement wE : descriptionElem.findElements(By.xpath(".//*"))) {
                 //System.out.println(wE.getTagName());
                 if (wE.getTagName().equals("textarea")) {
                     wE.clear();
                     wE.sendKeys(description);
                 }
-            }
+            }*/
+
+            driver.switchTo().frame("_general-form-1-3_ifr");
+            // 2. Find the editable <body> inside the iframe
+            WebElement body = driver.findElement(By.tagName("body"));
+            // 3. Clear any existing content and write new text
+            body.clear();
+            body.sendKeys(stripBBCode(description));
+            // 4. Switch back to main content
+            driver.switchTo().defaultContent();
+
             sleep(1000);
-            WebElement okayElem = driver.findElement(By.id("import-bbcode__update-description-tinymce-2"));
-            okayElem.click();
+            //WebElement okayElem = driver.findElement(By.id("import-bbcode__update-description-tinymce-2"));
+            //okayElem.click();
             sleep(2000);
 
             WebElement uploadElem = driver.findElement(By.name("update_file"));
             uploadElem.sendKeys(uploadFilePath);
             sleep(7000);
 
-            WebElement button = driver.findElement(By.name("submit"));
+            WebElement button = driver.findElement(By.id("_general-form-1-9"));
             button.submit();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static String stripBBCode(String input) {
+        String result = input;
+
+        // Remove all [TAG] and [/TAG] patterns including ones with attributes like [URL='...']
+        result = result.replaceAll("(?i)\\[(\\/)?[a-z]+(=[^\\]]+)?\\]", "");
+
+        // Replace multiple blank lines with just 2 newlines
+        result = result.replaceAll("\\n{3,}", "\n\n");
+
+        // Trim whitespace
+        return result.trim();
+    }
+
+    public static String convertToMarkdown(String input) {
+        String result = input;
+
+        // Convert [IMG]...[/IMG] to Markdown image
+        result = result.replaceAll("(?i)\\[IMG\\](.*?)\\[/IMG\\]", "![]($1)");
+
+        // Convert [URL='...']...[/URL] to Markdown link
+        result = result.replaceAll("(?i)\\[URL='(.*?)'\\](.*?)\\[/URL\\]", "[$2]($1)");
+
+        // Remove formatting tags: [B], [I], [SIZE=...], [COLOR=...], [CENTER], etc.
+        result = result.replaceAll("(?i)\\[/?(B|I|U|CENTER|SIZE=\\d+|SIZE|COLOR=#[0-9A-Fa-f]{6}|COLOR=rgb\\([^\\]]+\\)|COLOR)\\]", "");
+
+        // Convert multiple newlines into maximum 2 (to avoid too many line breaks)
+        result = result.replaceAll("\\n{3,}", "\n\n");
+
+        // Trim leading/trailing whitespace
+        return result.trim();
     }
 
 

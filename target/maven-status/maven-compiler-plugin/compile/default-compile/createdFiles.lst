@@ -1,7 +1,9 @@
 com\ssomar\minecraftmarketplacesapi\BuyerResp.class
+com\ssomar\minecraftmarketplacesapi\PolymartUploader.class
 com\ssomar\minecraftmarketplacesapi\SpigotBrowser.class
 com\ssomar\minecraftmarketplacesapi\BuiltByBitBrowser.class
 com\ssomar\minecraftmarketplacesapi\VirtualBrowser.class
 com\ssomar\minecraftmarketplacesapi\Main.class
 com\ssomar\minecraftmarketplacesapi\config\Config.class
 com\ssomar\minecraftmarketplacesapi\PolymartBrowser.class
+com\ssomar\minecraftmarketplacesapi\ModrinthUploader.class

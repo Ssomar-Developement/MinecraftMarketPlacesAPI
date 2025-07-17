@@ -1,6 +1,5 @@
 package com.ssomar.minecraftmarketplacesapi;
 
-import com.ssomar.minecraftmarketplacesapi.config.Config;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverService;
@@ -15,6 +14,7 @@ public class VirtualBrowser {
     private static final String OS = System.getProperty("os.name").toLowerCase();
 
     public VirtualBrowser(String link, String add, boolean forceHeadless) {
+        //WebDriverManager.chromedriver().clearDriverCache().setup();
         WebDriverManager.chromedriver().setup();
 
         System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");
@@ -22,34 +22,23 @@ public class VirtualBrowser {
 
         ChromeOptions options = new ChromeOptions();
 
-        options.addArguments(new String[] {"--disable-blink-features=AutomationControlled"});
+        options.addArguments(new String[]{"--disable-blink-features=AutomationControlled"});
         options.setExperimentalOption("useAutomationExtension", Boolean.valueOf(false));
         options.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
 
-        if(!isWindows() && !isMac()) {
+        if (!isWindows() && !isMac()) {
             options.addArguments("--disable-extensions");
             //options.addArguments("--headless");
             options.addArguments("--disable-gpu");
             options.addArguments("--no-sandbox");
         }
-        if(forceHeadless) options.addArguments("--headless");
+        if (forceHeadless) options.addArguments("--headless");
 
-        options.addArguments("user-data-dir="+ Config.getInstance().getUserDataPath()+add);
+        options.addArguments("user-data-dir=" + "C:\\selenium" + add);
         options.addArguments("--remote-allow-origins=*");
 
         this.driver = new ChromeDriver(options);
 
-        /* driver.executeScript("popup_window = window.open('"+link+"')");
-
-        try {
-            Thread.sleep(10000L);
-        } catch (InterruptedException ignored) { }
-
-        driver.executeScript("popup_window.close()");
-
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException ignored) { }*/
     }
 
     public static boolean isWindows() {
@@ -68,7 +57,7 @@ public class VirtualBrowser {
         if (driver.getPageSource().contains("Checking if the site connection is secure")) {
             System.out.println("Cloudflare detected.");
             return true;
-        }else
+        } else
             return false;
     }
 
