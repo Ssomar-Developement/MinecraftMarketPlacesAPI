@@ -13,7 +13,7 @@ public class VirtualBrowser {
 
     private static final String OS = System.getProperty("os.name").toLowerCase();
 
-    public VirtualBrowser(String link, String add, boolean forceHeadless) {
+    public VirtualBrowser(String link, String dataDir, boolean forceHeadless) {
         //WebDriverManager.chromedriver().clearDriverCache().setup();
         WebDriverManager.chromedriver().setup();
 
@@ -31,10 +31,14 @@ public class VirtualBrowser {
             //options.addArguments("--headless");
             options.addArguments("--disable-gpu");
             options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--no-first-run");
+            options.addArguments("--single-process");
+            options.addArguments("--disable-setuid-sandbox");
         }
         if (forceHeadless) options.addArguments("--headless");
 
-        options.addArguments("user-data-dir=" + "C:\\selenium" + add);
+        options.addArguments("user-data-dir=" + dataDir);
         options.addArguments("--remote-allow-origins=*");
 
         this.driver = new ChromeDriver(options);

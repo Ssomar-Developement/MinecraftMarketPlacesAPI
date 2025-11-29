@@ -1,8 +1,10 @@
 package com.ssomar.minecraftmarketplacesapi;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class SpigotBrowser extends VirtualBrowser {
 
@@ -12,8 +14,8 @@ public class SpigotBrowser extends VirtualBrowser {
 
     private int t;
 
-    public SpigotBrowser(String spigotUsername, String spigotPassword, boolean spigot2FA) throws Exception {
-        super(BASE, "Spigot", false);
+    public SpigotBrowser(String dataDir, String spigotUsername, String spigotPassword, boolean spigot2FA) throws Exception {
+        super(BASE, dataDir+"Spigot", false);
         t = 0;
         System.out.println("Try to connect on spigot with the username: " + spigotUsername);
         loggedInUserId = login(spigotUsername, spigotPassword, spigot2FA);
@@ -29,8 +31,23 @@ public class SpigotBrowser extends VirtualBrowser {
             System.out.println("URL : " + url);
             if (url.contains("logout")) {
                 System.out.println("Logout check");
-                WebElement element = this.driver.findElement(By.cssSelector("a[class='button primary LogOut']"));
-                element.click();
+                WebDriverWait wait = new WebDriverWait(this.driver, Duration.ofSeconds(30));
+                try {
+                    // Wait up to 20 seconds for the element to appear
+                    WebElement element = wait.until(
+                            ExpectedConditions.elementToBeClickable(By.cssSelector("a.button.primary.LogOut"))
+                    );
+
+                    element.click();
+                    System.out.println("Logout button clicked successfully!");
+
+                } catch (TimeoutException e) {
+                    System.out.println("Logout element not found after 20 seconds.");
+                } catch (NoSuchElementException e) {
+                    System.out.println("Logout element not found in DOM.");
+                } catch (Exception e) {
+                    System.out.println("Unexpected error while trying to click logout: " + e.getMessage());
+                }
             }
 
             navigate(BASE + "/login");

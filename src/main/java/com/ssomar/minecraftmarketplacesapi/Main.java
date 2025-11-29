@@ -2,7 +2,7 @@ package com.ssomar.minecraftmarketplacesapi;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         System.out.println("Hello, world!");
         /* Add test user on polymart and spigot */
         /* SpigotBrowser spigotBrowser = null;
@@ -18,7 +18,7 @@ public class Main {
         polymartBrowser.addBuyer("2858", "test3");
         polymartBrowser.close();*/
 
-        BuiltByBitBrowser builtByBitBrowser = new BuiltByBitBrowser("","");
+        BuiltByBitBrowser builtByBitBrowser = new BuiltByBitBrowser("C\\selenium","","");
         builtByBitBrowser.postAnUpdate("/resources/16364/post-update", "1.0.0", "test", "test", "C:\\Users\\xxx\\Downloads\\xxx.jar");
     }
 

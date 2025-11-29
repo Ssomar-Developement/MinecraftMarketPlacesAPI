@@ -2,10 +2,13 @@ package com.ssomar.minecraftmarketplacesapi;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PolymartBrowser extends VirtualBrowser {
 
@@ -13,41 +16,77 @@ public class PolymartBrowser extends VirtualBrowser {
 
     private final String loggedInUserId;
 
-    public PolymartBrowser(String polymardUsername, String polymartPassword) {
-        super(BASE, "2", false);
+    private int t;
+
+    public PolymartBrowser(String dataDir, String polymardUsername, String polymartPassword) throws Exception{
+        super(BASE, dataDir + "2", false);
+        t = 0;
         System.out.println("Try to connect on polymart with the username: " + polymardUsername);
         loggedInUserId = login(polymardUsername, polymartPassword);
     }
 
-    private String login(String username, String password) {
-        navigate(BASE + "/login");
+    private String login(String username, String password) throws Exception {
 
-        WebElement usernameField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("email"))));
-        WebElement passwordField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("password"))));
+        if (t == 4) {
+            throw new Exception("Error while login to : " + BASE + " with the username: " + username);
+        }
+        try {
+            navigate(BASE + "/login");
 
-        if (usernameField == null || passwordField == null) {
-            throw new IllegalStateException("Could not find a username or password field!");
+            WebElement usernameField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("email"))));
+            WebElement passwordField = new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.elementToBeClickable(driver.findElement(By.name("password"))));
+
+            if (usernameField == null || passwordField == null) {
+                throw new IllegalStateException("Could not find a username or password field!");
+            }
+
+            // Fill in credentials
+            usernameField.clear();
+            passwordField.clear();
+            usernameField.sendKeys(username);
+            passwordField.sendKeys(password);
+
+            sleep(1000);
+            // Login!
+            WebElement loginButton = driver.findElement(By.id("login-4"));
+            loginButton.click();
+
+            sleep(5000);
+            String userId = extractUserId(driver);
+
+            if (userId != null) {
+                System.out.println("User ID: " + userId);
+            } else {
+                System.out.println("Impossible d'extraire l'ID utilisateur");
+            }
+            return userId;
+
+        } catch (Exception | Error e) {
+            e.printStackTrace();
+            System.out.println("Error while login Polymart, try again in 15 seconds");
+            sleep(15000);
+            t++;
+            return login(username, password);
+        }
+    }
+
+    public String extractUserId(ChromeDriver driver) {
+
+        try {
+            WebElement link = driver.findElement(By.xpath("//a[.//img[contains(@alt, 'profile photo')]]"));
+
+            String href = link.getAttribute("href");
+            Pattern pattern = Pattern.compile("/user/(\\d+)");
+            Matcher matcher = pattern.matcher(href);
+
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        } catch (Exception e) {
+            //e.printStackTrace();
         }
 
-        // Fill in credentials
-        usernameField.clear();
-        passwordField.clear();
-        usernameField.sendKeys(username);
-        passwordField.sendKeys(password);
-
-        sleep(1000);
-        // Login!
-        WebElement loginButton = driver.findElement(By.id("login-4"));
-        loginButton.click();
-
-        sleep(5000);
-
-        WebElement link = driver.findElement(By.xpath("//a[img[contains(@alt, 'profile photo')]]"));
-        ;
-
-        return link.getAttribute("href")
-                .split("/user/")[1]
-                .replace("/", "");
+        return "username non retrouvé";
     }
 
     public BuyerResp addBuyer(String ressourceID, String buyerUsername) {

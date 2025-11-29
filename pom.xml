@@ -83,7 +83,7 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <outputFile>
-                                C:\Users\octav\Documents\GitHub\AutoPluginsUpdate\src\main\resources\MMPAPI.jar
+                                C:\Users\octav\Documents\GitHub\AutoPluginsUpdate_\src\main\resources\MMPAPI.jar
                             </outputFile>
                         </configuration>
                     </execution>
