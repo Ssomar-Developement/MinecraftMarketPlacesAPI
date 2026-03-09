@@ -28,13 +28,12 @@ public class VirtualBrowser {
 
         if (!isWindows() && !isMac()) {
             options.addArguments("--disable-extensions");
-            options.addArguments("--headless=new");
             options.addArguments("--disable-gpu");
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
             options.addArguments("--no-first-run");
+            options.addArguments("--single-process");
             options.addArguments("--disable-setuid-sandbox");
-            options.addArguments("--window-size=1920,1080");
         }
         if (forceHeadless) options.addArguments("--headless=new");
 
