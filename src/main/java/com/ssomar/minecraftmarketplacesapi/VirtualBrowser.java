@@ -6,7 +6,6 @@ import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.util.Collections;
-import java.util.Map;
 
 public class VirtualBrowser {
 
@@ -15,6 +14,7 @@ public class VirtualBrowser {
     private static final String OS = System.getProperty("os.name").toLowerCase();
 
     public VirtualBrowser(String link, String dataDir, boolean forceHeadless) {
+        //WebDriverManager.chromedriver().clearDriverCache().setup();
         WebDriverManager.chromedriver().setup();
 
         System.setProperty(ChromeDriverService.CHROME_DRIVER_SILENT_OUTPUT_PROPERTY, "true");
@@ -22,12 +22,13 @@ public class VirtualBrowser {
 
         ChromeOptions options = new ChromeOptions();
 
-        options.addArguments("--disable-blink-features=AutomationControlled");
-        options.setExperimentalOption("useAutomationExtension", false);
+        options.addArguments(new String[]{"--disable-blink-features=AutomationControlled"});
+        options.setExperimentalOption("useAutomationExtension", Boolean.valueOf(false));
         options.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
 
         if (!isWindows() && !isMac()) {
             options.addArguments("--disable-extensions");
+            //options.addArguments("--headless");
             options.addArguments("--disable-gpu");
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
@@ -35,26 +36,12 @@ public class VirtualBrowser {
             options.addArguments("--single-process");
             options.addArguments("--disable-setuid-sandbox");
         }
-        if (forceHeadless) options.addArguments("--headless=new");
+        if (forceHeadless) options.addArguments("--headless");
 
         options.addArguments("user-data-dir=" + dataDir);
         options.addArguments("--remote-allow-origins=*");
 
         this.driver = new ChromeDriver(options);
-
-        // Anti-bot detection: override navigator properties before any page loads
-        try {
-            driver.executeCdpCommand("Page.addScriptToEvaluateOnNewDocument",
-                Map.of("source",
-                    "Object.defineProperty(navigator, 'webdriver', { get: () => false }); " +
-                    "Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] }); " +
-                    "Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] }); " +
-                    "window.chrome = { runtime: {} };"
-                )
-            );
-        } catch (Exception e) {
-            System.err.println("Warning: Could not set CDP anti-detection: " + e.getMessage());
-        }
 
     }
 
@@ -71,26 +58,15 @@ public class VirtualBrowser {
     }
 
     public boolean isCloudflare() {
-        try {
-            String source = driver.getPageSource();
-            if (source.contains("Checking if the site connection is secure")
-                || source.contains("cf-challenge")
-                || source.contains("Just a moment")) {
-                System.out.println("Cloudflare detected.");
-                return true;
-            }
-        } catch (Exception e) {
-            // Session might be invalid
-        }
-        return false;
+        if (driver.getPageSource().contains("Checking if the site connection is secure")) {
+            System.out.println("Cloudflare detected.");
+            return true;
+        } else
+            return false;
     }
 
     public void close() {
-        try {
-            driver.quit();
-        } catch (Exception e) {
-            // ignore
-        }
+        driver.quit();
     }
 
     public void sleep(long millis) {
